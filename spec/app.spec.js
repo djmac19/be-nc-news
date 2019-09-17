@@ -34,12 +34,12 @@ describe("/api", () => {
           });
         });
     });
-    it("GET:400, responds with a custom error message when passed an invalid username", () => {
+    it("GET:404, responds with a custom error message when passed an invalid username", () => {
       return request(app)
         .get("/api/users/not-a-valid-username")
-        .expect(400)
+        .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal("invalid username");
+          expect(body.msg).to.equal("user not found");
         });
     });
   });
