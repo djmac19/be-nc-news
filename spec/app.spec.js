@@ -127,6 +127,56 @@ describe("/api", () => {
             );
           });
       });
+      describe.only("/comments", () => {
+        it("POST:201, responds with posted comment", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge", body: "body" })
+            .expect(201)
+            .then(({ body: { comment } }) => {
+              expect(comment).to.have.keys(
+                "comment_id",
+                "body",
+                "article_id",
+                "author",
+                "votes",
+                "created_at"
+              );
+              expect(comment.comment_id).to.equal(19);
+              expect(comment.body).to.equal("body");
+              expect(comment.article_id).to.equal(1);
+              expect(comment.author).to.equal("butter_bridge");
+              expect(comment.votes).to.equal(0);
+            });
+        });
+        it("POST:400, responds with an error message when request body is not in correct format", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({})
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal(
+                "null value in column violates not-null constraint"
+              );
+            });
+        });
+        it("GET:200, responds with an array of comments for the the given article id", () => {
+          return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments).to.be.an("array");
+              expect(body.comments[0]).to.have.keys(
+                "comment_id",
+                "votes",
+                "created_at",
+                "author",
+                "body"
+              );
+              expect(body.comments).to.have.length(13);
+            });
+        });
+      });
     });
   });
 });

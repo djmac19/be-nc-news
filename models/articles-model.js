@@ -54,3 +54,17 @@ exports.updateArticleById = (article_id, reqBody) => {
       .returning("*");
   }
 };
+
+exports.insertCommentByArticleId = (article_id, username, body) => {
+  return connection
+    .insert({ author: username, article_id, body })
+    .into("comments")
+    .returning("*");
+};
+
+exports.selectCommentsByArticleId = article_id => {
+  return connection
+    .select("comment_id", "votes", "created_at", "author", "body")
+    .from("comments")
+    .where({ article_id });
+};

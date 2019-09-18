@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const apiRouter = require("./routes/api-router");
-const { handleCustomErrors } = require("./error-handlers");
+const { handleCustomErrors, handlePsqlErrors } = require("./error-handlers");
 
 app.use(express.json());
 
@@ -12,6 +12,7 @@ app.route("/").get(() => {
 app.use("/api", apiRouter);
 
 app.use(handleCustomErrors);
+app.use(handlePsqlErrors);
 
 app.use("/*", (req, res, next) => {
   res.status(404).send({ msg: "route not found" });
