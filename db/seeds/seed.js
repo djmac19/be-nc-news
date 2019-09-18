@@ -22,14 +22,14 @@ exports.seed = function(knex) {
         .returning("*");
       return Promise.all([topicsInsertions, usersInsertions]);
     })
-    .then(([topicRows, userRows]) => {
+    .then(() => {
       const formattedArticles = formatDates(articleData);
       return knex("articles")
         .insert(formattedArticles)
         .returning("*");
     })
     .then(articleRows => {
-      const articleRef = makeRefObj(articleRows);
+      const articleRef = makeRefObj(articleRows, "title", "article_id");
       const formattedComments = formatComments(commentData, articleRef);
       return knex("comments")
         .insert(formattedComments)

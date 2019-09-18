@@ -3,6 +3,8 @@ const app = express();
 const apiRouter = require("./routes/api-router");
 const { handleCustomErrors } = require("./error-handlers");
 
+app.use(express.json());
+
 app.route("/").get(() => {
   console.log("made it as far as the app!");
 });
