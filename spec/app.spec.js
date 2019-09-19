@@ -24,28 +24,54 @@ describe("/api", () => {
           expect(body.topics).to.each.contain.keys("slug", "description");
         });
     });
+    it("INVALID METHODS:405", () => {
+      const invalidMethods = ["patch", "put", "post", "delete"];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]("/api/topics")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("method not allowed");
+          });
+      });
+      return Promise.all(methodPromises);
+    });
   });
   describe("/users", () => {
-    it("GET:200, responds with specified user object", () => {
-      return request(app)
-        .get("/api/users/butter_bridge")
-        .expect(200)
-        .then(({ body }) => {
-          expect(body.user).to.deep.equal({
-            username: "butter_bridge",
-            name: "jonny",
-            avatar_url:
-              "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg"
+    describe("/:username", () => {
+      it("GET:200, responds with specified user object", () => {
+        return request(app)
+          .get("/api/users/butter_bridge")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.user).to.deep.equal({
+              username: "butter_bridge",
+              name: "jonny",
+              avatar_url:
+                "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg"
+            });
           });
+      });
+      it("GET:404, responds with a custom error message when passed an invalid username", () => {
+        return request(app)
+          .get("/api/users/not-a-valid-username")
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("user not found");
+          });
+      });
+      it("INVALID METHODS:405", () => {
+        const invalidMethods = ["patch", "put", "post", "delete"];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+            [method]("/api/users/butter_bridge")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("method not allowed");
+            });
         });
-    });
-    it("GET:404, responds with a custom error message when passed an invalid username", () => {
-      return request(app)
-        .get("/api/users/not-a-valid-username")
-        .expect(404)
-        .then(({ body }) => {
-          expect(body.msg).to.equal("user not found");
-        });
+        return Promise.all(methodPromises);
+      });
     });
   });
   describe("/articles", () => {
@@ -134,23 +160,50 @@ describe("/api", () => {
           expect(body.msg).to.equal("order must be either 'asc' or 'desc'");
         });
     });
-    it("GET:400, responds with an error message when passed an author which is not in database", () => {
+    it("GET:404, responds with a custom error message when passed an author which is not in database", () => {
       return request(app)
         .get("/api/articles?author=not-a-valid-author")
-        .expect(400)
-        .then(({ body }) => {
-          expect(body.msg).to.equal("bad request");
-        });
-    });
-    it("GET:404, responds with an error message when passed an author which exists but does not have any articles associated with it", () => {
-      return request(app)
-        .get("/api/articles?author=lurker")
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal("no articles found");
+          expect(body.msg).to.equal("author does not exist");
         });
     });
-
+    it("GET:200, responds with an empty array when passed an author which exists but does not have any articles associated with it", () => {
+      return request(app)
+        .get("/api/articles?author=lurker")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.deep.equal([]);
+        });
+    });
+    it("GET:404, responds with a custom error message when passed a topic which is not in database", () => {
+      return request(app)
+        .get("/api/articles?topic=not-a-valid-topic")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal("topic does not exist");
+        });
+    });
+    it("GET:200, responds with an empty array when passed a topic which exists but does not have any articles associated with it", () => {
+      return request(app)
+        .get("/api/articles?topic=paper")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.deep.equal([]);
+        });
+    });
+    it("INVALID METHODS:405", () => {
+      const invalidMethods = ["patch", "put", "post", "delete"];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]("/api/articles")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("method not allowed");
+          });
+      });
+      return Promise.all(methodPromises);
+    });
     describe("/:article_id", () => {
       it("GET:200, responds with an article object", () => {
         return request(app)
@@ -260,6 +313,18 @@ describe("/api", () => {
             );
           });
       });
+      it("INVALID METHODS:405", () => {
+        const invalidMethods = ["put", "post", "delete"];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+            [method]("/api/articles/1")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("method not allowed");
+            });
+        });
+        return Promise.all(methodPromises);
+      });
       describe("/comments", () => {
         it("POST:201, responds with posted comment", () => {
           return request(app)
@@ -349,6 +414,18 @@ describe("/api", () => {
               expect(body.msg).to.equal("order must be either 'asc' or 'desc'");
             });
         });
+        it("INVALID METHODS:405", () => {
+          const invalidMethods = ["patch", "put", "delete"];
+          const methodPromises = invalidMethods.map(method => {
+            return request(app)
+              [method]("/api/articles/1/comments")
+              .expect(405)
+              .then(({ body }) => {
+                expect(body.msg).to.equal("method not allowed");
+              });
+          });
+          return Promise.all(methodPromises);
+        });
       });
     });
   });
@@ -432,6 +509,18 @@ describe("/api", () => {
           .then(({ body }) => {
             expect(body.msg).to.equal("invalid input syntax for integer");
           });
+      });
+      it("INVALID METHODS:405", () => {
+        const invalidMethods = ["get", "put", "post"];
+        const methodPromises = invalidMethods.map(method => {
+          return request(app)
+            [method]("/api/comments/1")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("method not allowed");
+            });
+        });
+        return Promise.all(methodPromises);
       });
     });
   });

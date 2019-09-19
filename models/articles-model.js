@@ -1,19 +1,7 @@
 const connection = require("../db/connection");
+const { selectUserByUsername } = require("./users-model");
 
 exports.selectArticleById = article_id => {
-  // const articlePromise = connection
-  //   .select("*")
-  //   .from("articles")
-  //   .where({ article_id });
-  // const countPromise = connection("comments")
-  //   .count("*")
-  //   .where({ article_id });
-  // return Promise.all([articlePromise, countPromise]).then(
-  //   ([[article], [{ count }]]) => {
-  //     article.comment_count = parseInt(count);
-  //     return article;
-  //   }
-  // );
   return connection
     .select("articles.*")
     .count({ comment_count: "comments.comment_id" })
@@ -108,9 +96,56 @@ exports.selectArticles = (
       }
     })
     .then(articles => {
-      console.log(articles, "<---articles in model then block");
+      if (articles.length === 0) {
+        return Promise.all([
+          articles,
+          checkAuthorExists(author),
+          checkTopicExists(topic)
+        ]);
+      }
       return articles.map(article => {
-        return { ...article, comment_count: +article.comment_count };
+        const formattedArticle = {
+          ...article,
+          comment_count: +article.comment_count
+        };
+        return [formattedArticle];
       });
+    })
+    .then(([formattedArticle]) => {
+      return formattedArticle;
     });
 };
+
+function checkAuthorExists(author) {
+  if (!author) {
+    return true;
+  }
+  return connection
+    .first("*")
+    .from("users")
+    .where({ username: author })
+    .then(author => {
+      if (author) {
+        return true;
+      } else {
+        return Promise.reject({ status: 404, msg: "author does not exist" });
+      }
+    });
+}
+
+function checkTopicExists(topic) {
+  if (!topic) {
+    return true;
+  }
+  return connection
+    .first("*")
+    .from("topics")
+    .where({ slug: topic })
+    .then(topic => {
+      if (topic) {
+        return true;
+      } else {
+        return Promise.reject({ status: 404, msg: "topic does not exist" });
+      }
+    });
+}
