@@ -2,7 +2,8 @@ const {
   selectArticleById,
   updateArticleById,
   insertCommentByArticleId,
-  selectCommentsByArticleId
+  selectCommentsByArticleId,
+  selectArticles
 } = require("../models/articles-model");
 
 exports.getArticleById = (req, res, next) => {
@@ -11,7 +12,9 @@ exports.getArticleById = (req, res, next) => {
     .then(article => {
       res.status(200).send({ article });
     })
-    .catch(err => next(err));
+    .catch(err => {
+      next(err);
+    });
 };
 
 exports.patchArticleById = (req, res, next) => {
@@ -19,7 +22,7 @@ exports.patchArticleById = (req, res, next) => {
   const reqBody = req.body;
   updateArticleById(article_id, reqBody)
     .then(([article]) => {
-      res.status(200).send({ article });
+      res.status(202).send({ article });
     })
     .catch(err => {
       next(err);
@@ -31,23 +34,32 @@ exports.postCommentByArticleId = (req, res, next) => {
   const { username, body } = req.body;
   insertCommentByArticleId(article_id, username, body)
     .then(([comment]) => {
-      console.log(comment);
       res.status(201).send({ comment });
     })
     .catch(err => {
-      console.log(err);
       next(err);
     });
 };
 
 exports.getCommentsByArticleId = (req, res, next) => {
   const { article_id } = req.params;
-  selectCommentsByArticleId(article_id)
+  const { sort_by, order } = req.query;
+  selectCommentsByArticleId(article_id, sort_by, order)
     .then(comments => {
       res.status(200).send({ comments });
     })
     .catch(err => {
-      console.log(err, "<---err in controller catch block");
+      next(err);
+    });
+};
+
+exports.getArticles = (req, res, next) => {
+  const { sort_by, order, author, topic } = req.query;
+  selectArticles(sort_by, order, author, topic)
+    .then(articles => {
+      res.status(200).send({ articles });
+    })
+    .catch(err => {
       next(err);
     });
 };

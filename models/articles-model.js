@@ -23,7 +23,7 @@ exports.selectArticleById = article_id => {
     .where("articles.article_id", article_id)
     .then(([article]) => {
       return article === undefined
-        ? Promise.reject({ status: 404, msg: "article not found" })
+        ? Promise.reject({ status: 404, msg: "article does not exist" })
         : { ...article, comment_count: +article.comment_count };
     });
 };
@@ -40,7 +40,7 @@ exports.updateArticleById = (article_id, reqBody) => {
       status: 400,
       msg: "value of 'inc_votes' property must be a number"
     });
-  } else if (Object.keys(reqBody).length !== 1) {
+  } else if (Object.keys(reqBody).length > 1) {
     return Promise.reject({
       status: 400,
       msg: "request body must have only one property"
@@ -62,9 +62,55 @@ exports.insertCommentByArticleId = (article_id, username, body) => {
     .returning("*");
 };
 
-exports.selectCommentsByArticleId = article_id => {
+exports.selectCommentsByArticleId = (
+  article_id,
+  sort_by = "created_at",
+  order = "desc"
+) => {
+  if (order !== "asc" && order !== "desc") {
+    return Promise.reject({
+      status: 400,
+      msg: "order must be either 'asc' or 'desc'"
+    });
+  }
   return connection
     .select("comment_id", "votes", "created_at", "author", "body")
     .from("comments")
-    .where({ article_id });
+    .where({ article_id })
+    .orderBy(sort_by, order);
+};
+
+exports.selectArticles = (
+  sort_by = "articles.created_at",
+  order = "desc",
+  author,
+  topic
+) => {
+  if (order !== "asc" && order !== "desc") {
+    return Promise.reject({
+      status: 400,
+      msg: "order must be either 'asc' or 'desc'"
+    });
+  }
+  return connection
+    .select("articles.*")
+    .count({ comment_count: "comments.comment_id" })
+    .from("articles")
+    .leftJoin("comments", "articles.article_id", "comments.article_id")
+    .groupBy("articles.article_id")
+    .orderBy(sort_by, order)
+    .modify(query => {
+      if (author) {
+        query.where("articles.author", author);
+      }
+      if (topic) {
+        query.where("articles.topic", topic);
+      }
+    })
+    .then(articles => {
+      console.log(articles, "<---articles in model then block");
+      return articles.map(article => {
+        return { ...article, comment_count: +article.comment_count };
+      });
+    });
 };

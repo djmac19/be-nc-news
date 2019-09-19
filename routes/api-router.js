@@ -2,6 +2,7 @@ const apiRouter = require("express").Router();
 const topicsRouter = require("./topics-router");
 const usersRouter = require("./users-router");
 const articlesRouter = require("./articles-router");
+const commentsRouter = require("./comments-router");
 
 apiRouter.route("/").get(() => {
   console.log("made it as far as the api router!");
@@ -12,6 +13,8 @@ apiRouter.use("/topics", topicsRouter);
 apiRouter.use("/users", usersRouter);
 
 apiRouter.use("/articles", articlesRouter);
+
+apiRouter.use("/comments", commentsRouter);
 
 apiRouter.use("/*", (req, res, next) => {
   res.status(404).send({ msg: "route not found" });
