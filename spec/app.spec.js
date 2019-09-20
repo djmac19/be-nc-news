@@ -124,7 +124,7 @@ describe("/api", () => {
           expect(body.articles).to.be.ascendingBy("created_at");
         });
     });
-    it("GET:200, accepts 'author' query which filters articles by specified username", () => {
+    it.only("GET:200, accepts an 'author' query which filters articles by specified username", () => {
       return request(app)
         .get("/api/articles?author=butter_bridge")
         .expect(200)
@@ -135,12 +135,14 @@ describe("/api", () => {
           expect(articles).to.have.length(3);
         });
     });
-    it("GET:200, accepts 'topic' query which filters articles by specified topic", () => {
+    it.only("GET:200, accepts a 'topic' query which filters articles by specified topic", () => {
       return request(app)
         .get("/api/articles?topic=mitch")
         .expect(200)
         .then(({ body: { articles } }) => {
-          expect(articles[0].topic).to.equal("mitch");
+          expect(articles)
+            .to.each.have.property("topic")
+            .equals("mitch");
           expect(articles).to.have.length(11);
         });
     });
@@ -160,7 +162,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("order must be either 'asc' or 'desc'");
         });
     });
-    it("GET:404, responds with a custom error message when passed an author which is not in database", () => {
+    it.only("GET:404, responds with a custom error message when passed an author which is not in database", () => {
       return request(app)
         .get("/api/articles?author=not-a-valid-author")
         .expect(404)
@@ -168,7 +170,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("author does not exist");
         });
     });
-    it("GET:200, responds with an empty array when passed an author which exists but does not have any articles associated with it", () => {
+    it.only("GET:200, responds with an empty array when passed an author which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?author=lurker")
         .expect(200)
@@ -176,7 +178,7 @@ describe("/api", () => {
           expect(body.articles).to.deep.equal([]);
         });
     });
-    it("GET:404, responds with a custom error message when passed a topic which is not in database", () => {
+    it.only("GET:404, responds with a custom error message when passed a topic which is not in database", () => {
       return request(app)
         .get("/api/articles?topic=not-a-valid-topic")
         .expect(404)
@@ -184,7 +186,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("topic does not exist");
         });
     });
-    it("GET:200, responds with an empty array when passed a topic which exists but does not have any articles associated with it", () => {
+    it.only("GET:200, responds with an empty array when passed a topic which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?topic=paper")
         .expect(200)
@@ -298,19 +300,32 @@ describe("/api", () => {
           .expect(400)
           .then(({ body }) => {
             expect(body.msg).to.equal(
-              "value of 'inc_votes' property must be a number"
+              "'inc_votes' property must have number value"
             );
           });
       });
-      it("PATCH:400, responds with a custom error message when there is more than one property on request body,", () => {
+      it("PATCH:202, ignores any additional properties on request body,", () => {
         return request(app)
           .patch("/api/articles/1")
           .send({ inc_votes: 1, name: "Mitch" })
-          .expect(400)
-          .then(({ body }) => {
-            expect(body.msg).to.equal(
-              "request body must have only one property"
+          .then(({ body: { article } }) => {
+            expect(article).to.have.keys(
+              "article_id",
+              "title",
+              "topic",
+              "author",
+              "body",
+              "created_at",
+              "votes"
             );
+            expect(article.article_id).to.equal(1);
+            expect(article.title).to.equal(
+              "Living in the shadow of a great man"
+            );
+            expect(article.topic).to.equal("mitch");
+            expect(article.author).to.equal("butter_bridge");
+            expect(article.body).to.equal("I find this existence challenging");
+            expect(article.votes).to.equal(101);
           });
       });
       it("INVALID METHODS:405", () => {
@@ -347,7 +362,7 @@ describe("/api", () => {
               expect(comment.votes).to.equal(0);
             });
         });
-        it("POST:400, responds with a PSQL error message when request body is not in correct format", () => {
+        it("POST:400, responds with a PSQL error message when request body is missing required columns", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .send({})
@@ -356,6 +371,36 @@ describe("/api", () => {
               expect(body.msg).to.equal(
                 "null value in column violates not-null constraint"
               );
+            });
+        });
+        it("POST:201, ignores any additional columns on request body", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge", body: "body", votes: 100 })
+            .expect(201)
+            .then(({ body: { comment } }) => {
+              expect(comment).to.have.keys(
+                "comment_id",
+                "body",
+                "article_id",
+                "author",
+                "votes",
+                "created_at"
+              );
+              expect(comment.comment_id).to.equal(19);
+              expect(comment.body).to.equal("body");
+              expect(comment.article_id).to.equal(1);
+              expect(comment.author).to.equal("butter_bridge");
+              expect(comment.votes).to.equal(0);
+            });
+        });
+        it("POST:404, returns an error message when passed a username which does not exist in the database", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "username", body: "body" })
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("user does not exist");
             });
         });
         it("GET:200, responds with an array of comments for the the given article id", () => {
@@ -478,15 +523,27 @@ describe("/api", () => {
             );
           });
       });
-      it("PATCH:400, responds with a custom error message when there is more than one property on request body,", () => {
+      it("PATCH:202, ignores any additional properties on request body,", () => {
         return request(app)
           .patch("/api/comments/1")
           .send({ inc_votes: 1, name: "Mitch" })
-          .expect(400)
-          .then(({ body }) => {
-            expect(body.msg).to.equal(
-              "request body must have only one property"
+          .expect(202)
+          .then(({ body: { comment } }) => {
+            expect(comment).to.have.keys(
+              "comment_id",
+              "body",
+              "article_id",
+              "author",
+              "votes",
+              "created_at"
             );
+            expect(comment.comment_id).to.equal(1);
+            expect(comment.body).to.equal(
+              "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!"
+            );
+            expect(comment.article_id).to.equal(9);
+            expect(comment.author).to.equal("butter_bridge");
+            expect(comment.votes).to.equal(17);
           });
       });
       it("DELETE:204, deletes given comment", () => {

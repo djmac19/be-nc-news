@@ -12,11 +12,6 @@ exports.updateCommentById = (comment_id, reqBody) => {
       status: 400,
       msg: "value of 'inc_votes' property must be a number"
     });
-  } else if (Object.keys(reqBody).length > 1) {
-    return Promise.reject({
-      status: 400,
-      msg: "request body must have only one property"
-    });
   } else {
     return connection
       .select("*")

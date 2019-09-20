@@ -26,12 +26,7 @@ exports.updateArticleById = (article_id, reqBody) => {
   } else if (typeof inc_votes !== "number") {
     return Promise.reject({
       status: 400,
-      msg: "value of 'inc_votes' property must be a number"
-    });
-  } else if (Object.keys(reqBody).length > 1) {
-    return Promise.reject({
-      status: 400,
-      msg: "request body must have only one property"
+      msg: "'inc_votes' property must have number value"
     });
   } else {
     return connection
@@ -45,9 +40,18 @@ exports.updateArticleById = (article_id, reqBody) => {
 
 exports.insertCommentByArticleId = (article_id, username, body) => {
   return connection
-    .insert({ author: username, article_id, body })
-    .into("comments")
-    .returning("*");
+    .first("*")
+    .from("users")
+    .where({ username })
+    .then(user => {
+      if (user === undefined) {
+        return Promise.reject({ status: 404, msg: "user does not exist" });
+      }
+      return connection
+        .insert({ author: username, article_id, body })
+        .into("comments")
+        .returning("*");
+    });
 };
 
 exports.selectCommentsByArticleId = (
@@ -103,16 +107,13 @@ exports.selectArticles = (
           checkTopicExists(topic)
         ]);
       }
-      return articles.map(article => {
-        const formattedArticle = {
-          ...article,
-          comment_count: +article.comment_count
-        };
-        return [formattedArticle];
+      const formattedArticles = articles.map(article => {
+        return { ...article, comment_count: +article.comment_count };
       });
+      return [formattedArticles];
     })
-    .then(([formattedArticle]) => {
-      return formattedArticle;
+    .then(([formattedArticles]) => {
+      return formattedArticles;
     });
 };
 
