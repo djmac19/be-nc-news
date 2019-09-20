@@ -5,10 +5,10 @@ const {
 
 exports.patchCommentById = (req, res, next) => {
   const { comment_id } = req.params;
-  const reqBody = req.body;
-  updateCommentById(comment_id, reqBody)
-    .then(([comment]) => {
-      res.status(202).send({ comment });
+  const { inc_votes } = req.body;
+  updateCommentById(comment_id, inc_votes)
+    .then(comment => {
+      res.status(200).send({ comment });
     })
     .catch(err => {
       next(err);

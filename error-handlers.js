@@ -11,7 +11,8 @@ exports.handleCustomErrors = (err, req, res, next) => {
 exports.handlePsqlErrors = (err, req, res, next) => {
   // console.log(err, '<---err in handlePsqlErrors');
   if (err.code) {
-    res.status(400).send(psqlErrorRefObj[err.code]);
+    const { status, msg } = psqlErrRefObj[err.code];
+    res.status(status).send({ msg });
   } else {
     next(err);
   }
@@ -25,8 +26,9 @@ exports.send500Error = (err, req, res, next) => {
   res.status(500).send({ msg: "internal server error" });
 };
 
-psqlErrorRefObj = {
-  "22P02": { msg: "id must be a number" },
-  "42703": { msg: "column does not exist" },
-  "23502": { msg: "request body missing required properties" }
+psqlErrRefObj = {
+  "22P02": { status: 400, msg: "input must be a number" },
+  "23502": { status: 400, msg: "request body missing required properties" },
+  "23503": { status: 404, msg: "article does not exist" },
+  "42703": { status: 400, msg: "column does not exist" }
 };

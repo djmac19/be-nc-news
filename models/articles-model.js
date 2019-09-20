@@ -12,30 +12,22 @@ exports.selectArticleById = article_id => {
     .then(([article]) => {
       return article === undefined
         ? Promise.reject({ status: 404, msg: "article does not exist" })
-        : { ...article, comment_count: +article.comment_count };
+        : { ...article, comment_count: article.comment_count };
     });
 };
 
-exports.updateArticleById = (article_id, reqBody) => {
-  const { inc_votes } = reqBody;
-  if (inc_votes === undefined) {
-    return Promise.reject({
-      status: 400,
-      msg: "request body must have 'inc_votes' property"
+exports.updateArticleById = (article_id, inc_votes = 0) => {
+  return connection
+    .select("*")
+    .from("articles")
+    .where({ article_id })
+    .increment("votes", inc_votes)
+    .returning("*")
+    .then(([article]) => {
+      return article === undefined
+        ? Promise.reject({ status: 404, msg: "article does not exist" })
+        : article;
     });
-  } else if (typeof inc_votes !== "number") {
-    return Promise.reject({
-      status: 400,
-      msg: "'inc_votes' property must have number value"
-    });
-  } else {
-    return connection
-      .select("*")
-      .from("articles")
-      .where({ article_id })
-      .increment("votes", inc_votes)
-      .returning("*");
-  }
 };
 
 exports.insertCommentByArticleId = (article_id, username, body) => {
@@ -75,7 +67,12 @@ exports.selectCommentsByArticleId = (
     .select("comment_id", "votes", "created_at", "author", "body")
     .from("comments")
     .where({ article_id })
-    .orderBy(sort_by, order);
+    .orderBy(sort_by, order)
+    .then(comments => {
+      return comments.length === 0
+        ? Promise.reject({ status: 404, msg: "article does not exist" })
+        : comments;
+    });
 };
 
 exports.selectArticles = (
@@ -109,12 +106,12 @@ exports.selectArticles = (
       if (articles.length === 0) {
         return Promise.all([
           articles,
-          checkAuthorExists(author),
+          checkUserExists(author),
           checkTopicExists(topic)
         ]);
       }
       const formattedArticles = articles.map(article => {
-        return { ...article, comment_count: +article.comment_count };
+        return { ...article, comment_count: article.comment_count };
       });
       return [formattedArticles];
     })
@@ -123,19 +120,19 @@ exports.selectArticles = (
     });
 };
 
-function checkAuthorExists(author) {
-  if (author === undefined) {
+function checkUserExists(user) {
+  if (user === undefined) {
     return true;
   }
   return connection
     .first("*")
     .from("users")
-    .where({ username: author })
-    .then(author => {
-      if (author) {
+    .where({ username: user })
+    .then(user => {
+      if (user) {
         return true;
       } else {
-        return Promise.reject({ status: 404, msg: "author does not exist" });
+        return Promise.reject({ status: 404, msg: "user does not exist" });
       }
     });
 }
