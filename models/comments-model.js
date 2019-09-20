@@ -10,7 +10,7 @@ exports.updateCommentById = (comment_id, reqBody) => {
   } else if (typeof inc_votes !== "number") {
     return Promise.reject({
       status: 400,
-      msg: "value of 'inc_votes' property must be a number"
+      msg: "'inc_votes' property must have number value"
     });
   } else {
     return connection

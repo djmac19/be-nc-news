@@ -39,10 +39,16 @@ exports.updateArticleById = (article_id, reqBody) => {
 };
 
 exports.insertCommentByArticleId = (article_id, username, body) => {
+  if (username === undefined) {
+    return Promise.reject({
+      status: 400,
+      msg: "request body must have 'username' property"
+    });
+  }
   return connection
     .first("*")
     .from("users")
-    .where({ username })
+    .where("username", username)
     .then(user => {
       if (user === undefined) {
         return Promise.reject({ status: 404, msg: "user does not exist" });
@@ -118,7 +124,7 @@ exports.selectArticles = (
 };
 
 function checkAuthorExists(author) {
-  if (!author) {
+  if (author === undefined) {
     return true;
   }
   return connection
@@ -135,7 +141,7 @@ function checkAuthorExists(author) {
 }
 
 function checkTopicExists(topic) {
-  if (!topic) {
+  if (topic === undefined) {
     return true;
   }
   return connection

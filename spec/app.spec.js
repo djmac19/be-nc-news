@@ -15,7 +15,7 @@ describe("/api", () => {
   });
   after(() => connection.destroy());
   describe("/topics", () => {
-    it("GET:200, responds with an array of topic objects", () => {
+    it("GET:200, responds with array of topic objects", () => {
       return request(app)
         .get("/api/topics")
         .expect(200)
@@ -52,7 +52,7 @@ describe("/api", () => {
             });
           });
       });
-      it("GET:404, responds with a custom error message when passed an invalid username", () => {
+      it("GET:404, responds with custom error message when passed invalid username", () => {
         return request(app)
           .get("/api/users/not-a-valid-username")
           .expect(404)
@@ -75,7 +75,7 @@ describe("/api", () => {
     });
   });
   describe("/articles", () => {
-    it("GET:200, responds with an array of article objects", () => {
+    it("GET:200, responds with array of article objects", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
@@ -92,7 +92,7 @@ describe("/api", () => {
           );
         });
     });
-    it("GET:200, each article object has a comment count property", () => {
+    it("GET:200, each article object has 'comment_count' property", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
@@ -108,7 +108,7 @@ describe("/api", () => {
           expect(body.articles).to.be.descendingBy("created_at");
         });
     });
-    it("GET:200, accepts a 'sort_by' query which sorts articles by given column name", () => {
+    it("GET:200, accepts 'sort_by' query which sorts articles by given column name", () => {
       return request(app)
         .get("/api/articles?sort_by=votes")
         .expect(200)
@@ -116,7 +116,7 @@ describe("/api", () => {
           expect(body.articles).to.be.descendingBy("votes");
         });
     });
-    it("GET:200, accepts an 'order' query which can be set to ascending or descending", () => {
+    it("GET:200, accepts 'order' query which can be set to ascending or descending", () => {
       return request(app)
         .get("/api/articles?order=asc")
         .expect(200)
@@ -124,7 +124,7 @@ describe("/api", () => {
           expect(body.articles).to.be.ascendingBy("created_at");
         });
     });
-    it.only("GET:200, accepts an 'author' query which filters articles by specified username", () => {
+    it("GET:200, accepts 'author' query which filters articles by specified username", () => {
       return request(app)
         .get("/api/articles?author=butter_bridge")
         .expect(200)
@@ -135,7 +135,7 @@ describe("/api", () => {
           expect(articles).to.have.length(3);
         });
     });
-    it.only("GET:200, accepts a 'topic' query which filters articles by specified topic", () => {
+    it("GET:200, accepts 'topic' query which filters articles by specified topic", () => {
       return request(app)
         .get("/api/articles?topic=mitch")
         .expect(200)
@@ -146,15 +146,15 @@ describe("/api", () => {
           expect(articles).to.have.length(11);
         });
     });
-    it("GET:400, responds with a PSQL error message when passed an invalid 'sort_by' query", () => {
+    it("GET:400, responds with PSQL error message when passed invalid 'sort_by' query", () => {
       return request(app)
         .get("/api/articles?sort_by=not-a-valid-column")
         .expect(400)
         .then(({ body }) => {
           expect(body.msg).to.equal("column does not exist");
         });
-    });
-    it("GET:400, responds with a custom error message when passed an invalid 'order' query", () => {
+    }); // PSQL 42703
+    it("GET:400, responds with custom error message when passed invalid 'order' query", () => {
       return request(app)
         .get("/api/articles?order=not-a-valid-direction")
         .expect(400)
@@ -162,7 +162,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("order must be either 'asc' or 'desc'");
         });
     });
-    it.only("GET:404, responds with a custom error message when passed an author which is not in database", () => {
+    it("GET:404, responds with custom error message when passed author which is not in database", () => {
       return request(app)
         .get("/api/articles?author=not-a-valid-author")
         .expect(404)
@@ -170,7 +170,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("author does not exist");
         });
     });
-    it.only("GET:200, responds with an empty array when passed an author which exists but does not have any articles associated with it", () => {
+    it("GET:200, responds with empty array when passed author which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?author=lurker")
         .expect(200)
@@ -178,7 +178,7 @@ describe("/api", () => {
           expect(body.articles).to.deep.equal([]);
         });
     });
-    it.only("GET:404, responds with a custom error message when passed a topic which is not in database", () => {
+    it("GET:404, responds with custom error message when passed topic which is not in database", () => {
       return request(app)
         .get("/api/articles?topic=not-a-valid-topic")
         .expect(404)
@@ -186,7 +186,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("topic does not exist");
         });
     });
-    it.only("GET:200, responds with an empty array when passed a topic which exists but does not have any articles associated with it", () => {
+    it("GET:200, responds with empty array when passed topic which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?topic=paper")
         .expect(200)
@@ -207,7 +207,7 @@ describe("/api", () => {
       return Promise.all(methodPromises);
     });
     describe("/:article_id", () => {
-      it("GET:200, responds with an article object", () => {
+      it("GET:200, responds with article object", () => {
         return request(app)
           .get("/api/articles/1")
           .expect(200)
@@ -231,7 +231,7 @@ describe("/api", () => {
             expect(article.votes).to.equal(100);
           });
       });
-      it("GET:200, article object has a comment count property", () => {
+      it("GET:200, article object has 'comment_count' property", () => {
         return request(app)
           .get("/api/articles/1")
           .expect(200)
@@ -239,7 +239,7 @@ describe("/api", () => {
             expect(article.comment_count).to.equal(13);
           });
       });
-      it("GET:404, responds with a custom error message when passed an article_id of correct type but article does not exist", () => {
+      it("GET:404, responds with custom error message when passed article_id of correct type but article does not exist", () => {
         return request(app)
           .get("/api/articles/999999")
           .expect(404)
@@ -247,14 +247,14 @@ describe("/api", () => {
             expect(body.msg).to.equal("article does not exist");
           });
       });
-      it("GET:400, responds with a PSQL error message when passed an article_id of incorrect type", () => {
+      it("GET:400, responds with PSQL error message when passed article_id of incorrect type", () => {
         return request(app)
           .get("/api/articles/dog")
           .expect(400)
           .then(({ body }) => {
-            expect(body.msg).to.equal("invalid input syntax for integer");
+            expect(body.msg).to.equal("id must be a number");
           });
-      });
+      }); // PSQL 22P02
       it("PATCH:202, returns updated article with its vote property incremented by given amount", () => {
         return request(app)
           .patch("/api/articles/1")
@@ -280,8 +280,7 @@ describe("/api", () => {
             expect(article.votes).to.equal(101);
           });
       });
-      it("PATCH:400, responds with a custom error message when there is no inc_votes property on request body,", () => {
-        // PSQL: 22P02
+      it("PATCH:400, responds with custom error message when there is no inc_votes property on request body,", () => {
         return request(app)
           .patch("/api/articles/1")
           .send({})
@@ -291,9 +290,8 @@ describe("/api", () => {
               "request body must have 'inc_votes' property"
             );
           });
-      });
-      it("PATCH:400, responds with a custom error message when inc_votes property is of incorrect type,", () => {
-        // PSQL: 22P02
+      }); // PSQL: 22P02
+      it("PATCH:400, responds with custom error message when inc_votes property is of incorrect type,", () => {
         return request(app)
           .patch("/api/articles/1")
           .send({ inc_votes: "cat" })
@@ -303,7 +301,7 @@ describe("/api", () => {
               "'inc_votes' property must have number value"
             );
           });
-      });
+      }); // PSQL: 22P02
       it("PATCH:202, ignores any additional properties on request body,", () => {
         return request(app)
           .patch("/api/articles/1")
@@ -362,17 +360,28 @@ describe("/api", () => {
               expect(comment.votes).to.equal(0);
             });
         });
-        it("POST:400, responds with a PSQL error message when request body is missing required columns", () => {
+        it("POST:400, responds with custom error message when request body is missing 'username' property", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .send({})
             .expect(400)
             .then(({ body }) => {
               expect(body.msg).to.equal(
-                "null value in column violates not-null constraint"
+                "request body must have 'username' property"
               );
             });
         });
+        it("POST:400, responds with PSQL error message when request body is missing 'body' property", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge" })
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal(
+                "request body missing required properties"
+              );
+            });
+        }); // PSQL 23502
         it("POST:201, ignores any additional columns on request body", () => {
           return request(app)
             .post("/api/articles/1/comments")
@@ -394,7 +403,7 @@ describe("/api", () => {
               expect(comment.votes).to.equal(0);
             });
         });
-        it("POST:404, returns an error message when passed a username which does not exist in the database", () => {
+        it("POST:404, responds with custom error message when passed username which does not exist in database", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .send({ username: "username", body: "body" })
@@ -403,7 +412,7 @@ describe("/api", () => {
               expect(body.msg).to.equal("user does not exist");
             });
         });
-        it("GET:200, responds with an array of comments for the the given article id", () => {
+        it("GET:200, responds with array of comments for given article id", () => {
           return request(app)
             .get("/api/articles/1/comments")
             .expect(200)
@@ -427,7 +436,7 @@ describe("/api", () => {
               expect(body.comments).to.be.descendingBy("created_at");
             });
         });
-        it("GET:200, accepts a 'sort_by' query which sorts comments by given column name", () => {
+        it("GET:200, accepts 'sort_by' query which sorts comments by given column name", () => {
           return request(app)
             .get("/api/articles/1/comments?sort_by=votes")
             .expect(200)
@@ -435,7 +444,7 @@ describe("/api", () => {
               expect(body.comments).to.be.descendingBy("votes");
             });
         });
-        it("GET:200, accepts an 'order' query which can be set to ascending or descending", () => {
+        it("GET:200, accepts 'order' query which can be set to ascending or descending", () => {
           return request(app)
             .get("/api/articles/1/comments?order=asc")
             .expect(200)
@@ -443,15 +452,15 @@ describe("/api", () => {
               expect(body.comments).to.be.ascendingBy("created_at");
             });
         });
-        it("GET:400, responds with a PSQL error message when passed an invalid 'sort_by' query", () => {
+        it("GET:400, responds with PSQL error message when passed invalid 'sort_by' query", () => {
           return request(app)
             .get("/api/articles/1/comments?sort_by=not-a-valid-column")
             .expect(400)
             .then(({ body }) => {
               expect(body.msg).to.equal("column does not exist");
             });
-        });
-        it("GET:400, responds with a custom error message when passed an invalid 'order' query", () => {
+        }); // PSQL 42703
+        it("GET:400, responds with custom error message when passed invalid 'order' query", () => {
           return request(app)
             .get("/api/articles/1/comments?order=not-a-valid-direction")
             .expect(400)
@@ -499,8 +508,7 @@ describe("/api", () => {
             expect(comment.votes).to.equal(17);
           });
       });
-      it("PATCH:400, responds with a custom error message when there is no inc_votes property on request body,", () => {
-        // PSQL: 22P02
+      it("PATCH:400, responds with custom error message when there is no inc_votes property on request body,", () => {
         return request(app)
           .patch("/api/comments/1")
           .send({})
@@ -510,19 +518,18 @@ describe("/api", () => {
               "request body must have 'inc_votes' property"
             );
           });
-      });
-      it("PATCH:400, responds with a custom error message when inc_votes property is of incorrect type,", () => {
-        // PSQL: 22P02
+      }); // PSQL: 22P02
+      it("PATCH:400, responds with custom error message when inc_votes property is of incorrect type,", () => {
         return request(app)
           .patch("/api/comments/1")
           .send({ inc_votes: "cat" })
           .expect(400)
           .then(({ body }) => {
             expect(body.msg).to.equal(
-              "value of 'inc_votes' property must be a number"
+              "'inc_votes' property must have number value"
             );
           });
-      });
+      }); // PSQL: 22P02
       it("PATCH:202, ignores any additional properties on request body,", () => {
         return request(app)
           .patch("/api/comments/1")
@@ -551,7 +558,7 @@ describe("/api", () => {
           .delete("/api/comments/1")
           .expect(204);
       });
-      it("DELETE:404, responds with a custom error message when passed a comment_id of correct type but comment does not exist", () => {
+      it("DELETE:404, responds with custom error message when passed comment_id of correct type but comment does not exist", () => {
         return request(app)
           .delete("/api/comments/999999")
           .expect(404)
@@ -559,14 +566,14 @@ describe("/api", () => {
             expect(body.msg).to.equal("comment does not exist");
           });
       });
-      it("DELETE:400, responds with a PSQL error message when passed a comment_id of incorrect type", () => {
+      it("DELETE:400, responds with PSQL error message when passed comment_id of incorrect type", () => {
         return request(app)
           .delete("/api/comments/dog")
           .expect(400)
           .then(({ body }) => {
-            expect(body.msg).to.equal("invalid input syntax for integer");
+            expect(body.msg).to.equal("id must be a number");
           });
-      });
+      }); // PSQL 22P02
       it("INVALID METHODS:405", () => {
         const invalidMethods = ["get", "put", "post"];
         const methodPromises = invalidMethods.map(method => {

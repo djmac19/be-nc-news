@@ -26,7 +26,7 @@ exports.send500Error = (err, req, res, next) => {
 };
 
 psqlErrorRefObj = {
-  "22P02": { msg: "invalid input syntax for integer" },
-  "23502": { msg: "null value in column violates non-null constraint" },
-  "42703": { msg: "column does not exist" }
+  "22P02": { msg: "id must be a number" },
+  "42703": { msg: "column does not exist" },
+  "23502": { msg: "request body missing required properties" }
 };
