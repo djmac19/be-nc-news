@@ -53,9 +53,7 @@ exports.selectCommentsByArticleId = (
     .where({ article_id })
     .orderBy(sort_by, order)
     .then(comments => {
-      return comments.length === 0
-        ? Promise.reject({ status: 404, msg: "article does not exist" })
-        : comments;
+      return comments;
     });
 };
 

@@ -95,7 +95,7 @@ describe("/api", () => {
     });
   });
   describe("/articles", () => {
-    it("GET:200, responds with array of article objects", () => {
+    it.only("GET:200, responds with array of article objects", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
@@ -112,7 +112,7 @@ describe("/api", () => {
           );
         });
     });
-    it("GET:200, each article object has 'comment_count' property which has a string value", () => {
+    it.only("GET:200, each article object has 'comment_count' property which has a string value", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
@@ -121,7 +121,7 @@ describe("/api", () => {
           expect(articles[0].comment_count).to.equal("13");
         });
     });
-    it("GET:200, articles are sorted by 'created_at' column in descending order by default", () => {
+    it.only("GET:200, articles are sorted by 'created_at' column in descending order by default", () => {
       return request(app)
         .get("/api/articles/")
         .expect(200)
@@ -129,7 +129,7 @@ describe("/api", () => {
           expect(body.articles).to.be.descendingBy("created_at");
         });
     });
-    it("GET:200, accepts 'sort_by' query which sorts articles by given column name", () => {
+    it.only("GET:200, accepts 'sort_by' query which sorts articles by given column name", () => {
       return request(app)
         .get("/api/articles?sort_by=votes")
         .expect(200)
@@ -137,7 +137,7 @@ describe("/api", () => {
           expect(body.articles).to.be.descendingBy("votes");
         });
     });
-    it("GET:200, accepts 'order' query which can be set to ascending or descending", () => {
+    it.only("GET:200, accepts 'order' query which can be set to ascending or descending", () => {
       return request(app)
         .get("/api/articles?order=asc")
         .expect(200)
@@ -145,7 +145,7 @@ describe("/api", () => {
           expect(body.articles).to.be.ascendingBy("created_at");
         });
     });
-    it("GET:200, accepts 'author' query which filters articles by specified username", () => {
+    it.only("GET:200, accepts 'author' query which filters articles by specified username", () => {
       return request(app)
         .get("/api/articles?author=butter_bridge")
         .expect(200)
@@ -156,7 +156,7 @@ describe("/api", () => {
           expect(articles).to.have.length(3);
         });
     });
-    it("GET:200, accepts 'topic' query which filters articles by specified topic", () => {
+    it.only("GET:200, accepts 'topic' query which filters articles by specified topic", () => {
       return request(app)
         .get("/api/articles?topic=mitch")
         .expect(200)
@@ -167,7 +167,7 @@ describe("/api", () => {
           expect(articles).to.have.length(11);
         });
     });
-    it("GET:400, responds with PSQL error message when passed invalid 'sort_by' query", () => {
+    it.only("GET:400, responds with PSQL error message when passed invalid 'sort_by' query", () => {
       return request(app)
         .get("/api/articles?sort_by=not-a-valid-column")
         .expect(400)
@@ -175,7 +175,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("column does not exist");
         });
     }); // PSQL 42703
-    it("GET:400, responds with custom error message when passed invalid 'order' query", () => {
+    it.only("GET:400, responds with custom error message when passed invalid 'order' query", () => {
       return request(app)
         .get("/api/articles?order=not-a-valid-direction")
         .expect(400)
@@ -183,7 +183,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("order must be either 'asc' or 'desc'");
         });
     });
-    it("GET:404, responds with custom error message when passed author which is not in database", () => {
+    it.only("GET:404, responds with custom error message when passed author which is not in database", () => {
       return request(app)
         .get("/api/articles?author=not-a-valid-author")
         .expect(404)
@@ -191,7 +191,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("user does not exist");
         });
     });
-    it("GET:200, responds with empty array when passed author which exists but does not have any articles associated with it", () => {
+    it.only("GET:200, responds with empty array when passed author which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?author=lurker")
         .expect(200)
@@ -199,7 +199,7 @@ describe("/api", () => {
           expect(body.articles).to.deep.equal([]);
         });
     });
-    it("GET:404, responds with custom error message when passed topic which is not in database", () => {
+    it.only("GET:404, responds with custom error message when passed topic which is not in database", () => {
       return request(app)
         .get("/api/articles?topic=not-a-valid-topic")
         .expect(404)
@@ -207,7 +207,7 @@ describe("/api", () => {
           expect(body.msg).to.equal("topic does not exist");
         });
     });
-    it("GET:200, responds with empty array when passed topic which exists but does not have any articles associated with it", () => {
+    it.only("GET:200, responds with empty array when passed topic which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?topic=paper")
         .expect(200)
@@ -390,7 +390,7 @@ describe("/api", () => {
         });
         return Promise.all(methodPromises);
       });
-      describe.only("/comments", () => {
+      describe("/comments", () => {
         it("POST:201, responds with posted comment", () => {
           return request(app)
             .post("/api/articles/1/comments")
@@ -498,7 +498,7 @@ describe("/api", () => {
               expect(body.comments).to.have.length(13);
             });
         });
-        it("GET:200, responds with an empty array when passed article_id which exists but does not have any comments associated with it", () => {
+        it("GET:200, responds with an empty array when passed article_id which exists but article does not have any comments associated with it", () => {
           return request(app)
             .get("/api/articles/2/comments")
             .expect(200)
