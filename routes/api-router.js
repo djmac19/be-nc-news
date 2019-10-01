@@ -4,7 +4,7 @@ const usersRouter = require("./users-router");
 const articlesRouter = require("./articles-router");
 const commentsRouter = require("./comments-router");
 const endpoints = require("../endpoints");
-const { send405Error } = require("../error-handlers");
+const { handleRouteNotFound, send405Error } = require("../error-handlers");
 
 apiRouter
   .route("/")
@@ -21,8 +21,6 @@ apiRouter.use("/articles", articlesRouter);
 
 apiRouter.use("/comments", commentsRouter);
 
-apiRouter.use("/*", (req, res, next) => {
-  res.status(404).send({ msg: "route not found" });
-});
+apiRouter.use("/*", handleRouteNotFound);
 
 module.exports = apiRouter;

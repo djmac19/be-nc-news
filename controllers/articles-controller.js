@@ -5,6 +5,7 @@ const {
   selectCommentsByArticleId,
   selectArticles
 } = require("../models/articles-model");
+const { selectUserByUsername } = require("../models/users-model");
 
 exports.getArticleById = (req, res, next) => {
   const { article_id } = req.params;
@@ -32,7 +33,10 @@ exports.patchArticleById = (req, res, next) => {
 exports.postCommentByArticleId = (req, res, next) => {
   const { article_id } = req.params;
   const { username, body } = req.body;
-  insertCommentByArticleId(article_id, username, body)
+  selectUserByUsername(username)
+    .then(() => {
+      return insertCommentByArticleId(article_id, username, body);
+    })
     .then(([comment]) => {
       res.status(201).send({ comment });
     })
@@ -49,6 +53,7 @@ exports.getCommentsByArticleId = (req, res, next) => {
       res.status(200).send({ comments });
     })
     .catch(err => {
+      console.log(err);
       next(err);
     });
 };

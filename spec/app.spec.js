@@ -344,7 +344,7 @@ describe("/api", () => {
             expect(article.votes).to.equal(100);
           });
       });
-      it("PATCH:400, responds with PSQL error message when inc_votes property is of incorrect type,", () => {
+      it("PATCH:400, responds with PSQL error message when inc_votes property is of incorrect type", () => {
         return request(app)
           .patch("/api/articles/1")
           .send({ inc_votes: "cat" })
@@ -353,7 +353,7 @@ describe("/api", () => {
             expect(body.msg).to.equal("input must be a number");
           });
       }); // PSQL: 22P02
-      it("PATCH:200, ignores any additional properties on request body,", () => {
+      it("PATCH:200, ignores any additional properties on request body", () => {
         return request(app)
           .patch("/api/articles/1")
           .send({ inc_votes: 1, name: "Mitch" })
@@ -390,7 +390,7 @@ describe("/api", () => {
         });
         return Promise.all(methodPromises);
       });
-      describe("/comments", () => {
+      describe.only("/comments", () => {
         it("POST:201, responds with posted comment", () => {
           return request(app)
             .post("/api/articles/1/comments")
@@ -412,15 +412,15 @@ describe("/api", () => {
               expect(comment.votes).to.equal(0);
             });
         });
-        it("POST:404, responds with custom error message when passed article_id of correct type but article does not exist", () => {
+        it("POST:404, responds with PSQL error message when passed article_id of correct type but article does not exist", () => {
           return request(app)
             .post("/api/articles/999999/comments")
             .send({ username: "butter_bridge", body: "body" })
             .expect(404)
             .then(({ body }) => {
               expect(body.msg).to.equal("article does not exist");
-            }); // PSQL 23503
-        });
+            });
+        }); // PSQL 23503
         it("POST:400, responds with PSQL error message when passed article_id of incorrect type", () => {
           return request(app)
             .post("/api/articles/dog/comments")
@@ -479,7 +479,7 @@ describe("/api", () => {
             .send({ username: "username", body: "body" })
             .expect(404)
             .then(({ body }) => {
-              expect(body.msg).to.equal("user does not exist");
+              expect(body.msg).to.equal("user not found");
             });
         });
         it("GET:200, responds with array of comments for given article id", () => {
@@ -496,6 +496,15 @@ describe("/api", () => {
                 "created_at"
               );
               expect(body.comments).to.have.length(13);
+            });
+        });
+        it("GET:200, responds with an empty array when passed article_id which exists but does not have any comments associated with it", () => {
+          return request(app)
+            .get("/api/articles/2/comments")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments).to.be.an("array");
+              expect(body.comments).to.have.length(0);
             });
         });
         it("GET:404, responds with custom error message when passed article_id of correct type but article does not exist", () => {

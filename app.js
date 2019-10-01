@@ -4,6 +4,7 @@ const apiRouter = require("./routes/api-router");
 const {
   handleCustomErrors,
   handlePsqlErrors,
+  handleRouteNotFound,
   send500Error
 } = require("./error-handlers");
 
@@ -19,8 +20,6 @@ app.use(handleCustomErrors);
 app.use(handlePsqlErrors);
 app.use(send500Error);
 
-app.use("/*", (req, res, next) => {
-  res.status(404).send({ msg: "route not found" });
-});
+app.use("/*", handleRouteNotFound);
 
 module.exports = app;

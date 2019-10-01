@@ -18,6 +18,10 @@ exports.handlePsqlErrors = (err, req, res, next) => {
   }
 };
 
+exports.handleRouteNotFound = (req, res, next) => {
+  res.status(404).send({ msg: "route not found" });
+};
+
 exports.send405Error = (req, res) => {
   res.status(405).send({ msg: "method not allowed" });
 };

@@ -1,5 +1,4 @@
 const connection = require("../db/connection");
-const { selectUserByUsername } = require("./users-model");
 
 exports.selectArticleById = article_id => {
   return connection
@@ -31,25 +30,10 @@ exports.updateArticleById = (article_id, inc_votes = 0) => {
 };
 
 exports.insertCommentByArticleId = (article_id, username, body) => {
-  if (username === undefined) {
-    return Promise.reject({
-      status: 400,
-      msg: "request body must have 'username' property"
-    });
-  }
   return connection
-    .first("*")
-    .from("users")
-    .where("username", username)
-    .then(user => {
-      if (user === undefined) {
-        return Promise.reject({ status: 404, msg: "user does not exist" });
-      }
-      return connection
-        .insert({ author: username, article_id, body })
-        .into("comments")
-        .returning("*");
-    });
+    .insert({ author: username, article_id, body })
+    .into("comments")
+    .returning("*");
 };
 
 exports.selectCommentsByArticleId = (
