@@ -33,6 +33,13 @@ exports.send500Error = (err, req, res, next) => {
 psqlErrRefObj = {
   "22P02": { status: 400, msg: "input must be a number" },
   "23502": { status: 400, msg: "request body missing required properties" },
-  "23503": { status: 404, msg: "article does not exist" },
-  "42703": { status: 400, msg: "column does not exist" }
+  "23503": { status: 404, msg: "user not found" },
+  "42703": {
+    status: 400,
+    msg: "invalid 'sort_by' query - column does not exist"
+  },
+  "2201X": {
+    status: 400,
+    msg: "invalid 'p' query - must be greater than or equal to 1"
+  }
 };

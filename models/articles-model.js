@@ -1,4 +1,6 @@
 const connection = require("../db/connection");
+const { selectUserByUsername } = require("./users-model");
+const { selectTopicBySlug } = require("./topics-model");
 
 exports.selectArticleById = article_id => {
   return connection
@@ -9,7 +11,7 @@ exports.selectArticleById = article_id => {
     .groupBy("articles.article_id")
     .where("articles.article_id", article_id)
     .then(([article]) => {
-      return article === undefined
+      return !article
         ? Promise.reject({ status: 404, msg: "article does not exist" })
         : { ...article, comment_count: article.comment_count };
     });
@@ -23,7 +25,7 @@ exports.updateArticleById = (article_id, inc_votes = 0) => {
     .increment("votes", inc_votes)
     .returning("*")
     .then(([article]) => {
-      return article === undefined
+      return !article
         ? Promise.reject({ status: 404, msg: "article does not exist" })
         : article;
     });
@@ -39,12 +41,20 @@ exports.insertCommentByArticleId = (article_id, username, body) => {
 exports.selectCommentsByArticleId = (
   article_id,
   sort_by = "created_at",
-  order = "desc"
+  order = "desc",
+  limit = 10,
+  p
 ) => {
   if (order !== "asc" && order !== "desc") {
     return Promise.reject({
       status: 400,
-      msg: "order must be either 'asc' or 'desc'"
+      msg: "invalid 'order' query - must be either 'asc' or 'desc'"
+    });
+  }
+  if (limit !== 10 && !/\d+/.test(limit)) {
+    return Promise.reject({
+      status: 400,
+      msg: "invalid 'limit' query - must be a number"
     });
   }
   return connection
@@ -52,7 +62,18 @@ exports.selectCommentsByArticleId = (
     .from("comments")
     .where({ article_id })
     .orderBy(sort_by, order)
+    .limit(limit)
+    .modify(query => {
+      if (p) {
+        query.offset((p - 1) * limit);
+      }
+    })
     .then(comments => {
+      return comments.length === 0
+        ? Promise.all([comments, exports.selectArticleById(article_id)])
+        : [comments];
+    })
+    .then(([comments]) => {
       return comments;
     });
 };
@@ -61,21 +82,30 @@ exports.selectArticles = (
   sort_by = "articles.created_at",
   order = "desc",
   author,
-  topic
+  topic,
+  limit = 10,
+  p
 ) => {
   if (order !== "asc" && order !== "desc") {
     return Promise.reject({
       status: 400,
-      msg: "order must be either 'asc' or 'desc'"
+      msg: "invalid 'order' query - must be either 'asc' or 'desc'"
     });
   }
-  return connection
+  if (limit !== 10 && !/\d+/.test(limit)) {
+    return Promise.reject({
+      status: 400,
+      msg: "invalid 'limit' query - must be a number"
+    });
+  }
+  const articlesPromise = connection
     .select("articles.*")
     .count({ comment_count: "comments.comment_id" })
     .from("articles")
     .leftJoin("comments", "articles.article_id", "comments.article_id")
     .groupBy("articles.article_id")
     .orderBy(sort_by, order)
+    .limit(limit)
     .modify(query => {
       if (author) {
         query.where("articles.author", author);
@@ -83,55 +113,39 @@ exports.selectArticles = (
       if (topic) {
         query.where("articles.topic", topic);
       }
-    })
-    .then(articles => {
+      if (p) {
+        query.offset((p - 1) * limit);
+      }
+    });
+  const totalCountPromise = connection
+    .count("article_id")
+    .from("articles")
+    .modify(query => {
+      if (author) {
+        query.where("articles.author", author);
+      }
+      if (topic) {
+        query.where("articles.topic", topic);
+      }
+    });
+  return Promise.all([articlesPromise, totalCountPromise])
+    .then(([articles, [{ count }]]) => {
       if (articles.length === 0) {
+        const formattedArticles = [...articles];
         return Promise.all([
-          articles,
-          checkUserExists(author),
-          checkTopicExists(topic)
+          formattedArticles,
+          count,
+          selectUserByUsername(author),
+          selectTopicBySlug(topic)
         ]);
       }
+
       const formattedArticles = articles.map(article => {
         return { ...article, comment_count: article.comment_count };
       });
-      return [formattedArticles];
+      return [formattedArticles, count];
     })
-    .then(([formattedArticles]) => {
-      return formattedArticles;
+    .then(([articles, count]) => {
+      return { articles, total_count: parseInt(count) };
     });
 };
-
-function checkUserExists(user) {
-  if (user === undefined) {
-    return true;
-  }
-  return connection
-    .first("*")
-    .from("users")
-    .where({ username: user })
-    .then(user => {
-      if (user) {
-        return true;
-      } else {
-        return Promise.reject({ status: 404, msg: "user does not exist" });
-      }
-    });
-}
-
-function checkTopicExists(topic) {
-  if (topic === undefined) {
-    return true;
-  }
-  return connection
-    .first("*")
-    .from("topics")
-    .where({ slug: topic })
-    .then(topic => {
-      if (topic) {
-        return true;
-      } else {
-        return Promise.reject({ status: 404, msg: "topic does not exist" });
-      }
-    });
-}

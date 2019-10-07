@@ -8,7 +8,7 @@ exports.updateCommentById = (comment_id, inc_votes = 0) => {
     .increment("votes", inc_votes)
     .returning("*")
     .then(([comment]) => {
-      return comment === undefined
+      return !comment
         ? Promise.reject({ status: 404, msg: "comment does not exist" })
         : comment;
     });

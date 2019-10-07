@@ -95,7 +95,7 @@ describe("/api", () => {
     });
   });
   describe("/articles", () => {
-    it.only("GET:200, responds with array of article objects", () => {
+    it("GET:200, responds with array of article objects", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
@@ -112,7 +112,7 @@ describe("/api", () => {
           );
         });
     });
-    it.only("GET:200, each article object has 'comment_count' property which has a string value", () => {
+    it("GET:200, each article object has 'comment_count' property which has a string value", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
@@ -121,7 +121,7 @@ describe("/api", () => {
           expect(articles[0].comment_count).to.equal("13");
         });
     });
-    it.only("GET:200, articles are sorted by 'created_at' column in descending order by default", () => {
+    it("GET:200, articles are sorted by 'created_at' column in descending order by default", () => {
       return request(app)
         .get("/api/articles/")
         .expect(200)
@@ -129,7 +129,7 @@ describe("/api", () => {
           expect(body.articles).to.be.descendingBy("created_at");
         });
     });
-    it.only("GET:200, accepts 'sort_by' query which sorts articles by given column name", () => {
+    it("GET:200, accepts 'sort_by' query which sorts articles by given column name", () => {
       return request(app)
         .get("/api/articles?sort_by=votes")
         .expect(200)
@@ -137,7 +137,7 @@ describe("/api", () => {
           expect(body.articles).to.be.descendingBy("votes");
         });
     });
-    it.only("GET:200, accepts 'order' query which can be set to ascending or descending", () => {
+    it("GET:200, accepts 'order' query which can be set to ascending or descending", () => {
       return request(app)
         .get("/api/articles?order=asc")
         .expect(200)
@@ -145,7 +145,7 @@ describe("/api", () => {
           expect(body.articles).to.be.ascendingBy("created_at");
         });
     });
-    it.only("GET:200, accepts 'author' query which filters articles by specified username", () => {
+    it("GET:200, accepts 'author' query which filters articles by specified username", () => {
       return request(app)
         .get("/api/articles?author=butter_bridge")
         .expect(200)
@@ -156,7 +156,7 @@ describe("/api", () => {
           expect(articles).to.have.length(3);
         });
     });
-    it.only("GET:200, accepts 'topic' query which filters articles by specified topic", () => {
+    it("GET:200, accepts 'topic' query which filters articles by specified topic", () => {
       return request(app)
         .get("/api/articles?topic=mitch")
         .expect(200)
@@ -164,34 +164,37 @@ describe("/api", () => {
           expect(articles)
             .to.each.have.property("topic")
             .equals("mitch");
-          expect(articles).to.have.length(11);
         });
     });
-    it.only("GET:400, responds with PSQL error message when passed invalid 'sort_by' query", () => {
+    it("GET:400, responds with PSQL error message when passed invalid 'sort_by' query", () => {
       return request(app)
         .get("/api/articles?sort_by=not-a-valid-column")
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).to.equal("column does not exist");
+          expect(body.msg).to.equal(
+            "invalid 'sort_by' query - column does not exist"
+          );
         });
     }); // PSQL 42703
-    it.only("GET:400, responds with custom error message when passed invalid 'order' query", () => {
+    it("GET:400, responds with custom error message when passed invalid 'order' query", () => {
       return request(app)
         .get("/api/articles?order=not-a-valid-direction")
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).to.equal("order must be either 'asc' or 'desc'");
+          expect(body.msg).to.equal(
+            "invalid 'order' query - must be either 'asc' or 'desc'"
+          );
         });
     });
-    it.only("GET:404, responds with custom error message when passed author which is not in database", () => {
+    it("GET:404, responds with custom error message when passed author which is not in database", () => {
       return request(app)
         .get("/api/articles?author=not-a-valid-author")
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal("user does not exist");
+          expect(body.msg).to.equal("user not found");
         });
     });
-    it.only("GET:200, responds with empty array when passed author which exists but does not have any articles associated with it", () => {
+    it("GET:200, responds with empty array when passed author which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?author=lurker")
         .expect(200)
@@ -199,7 +202,7 @@ describe("/api", () => {
           expect(body.articles).to.deep.equal([]);
         });
     });
-    it.only("GET:404, responds with custom error message when passed topic which is not in database", () => {
+    it("GET:404, responds with custom error message when passed topic which is not in database", () => {
       return request(app)
         .get("/api/articles?topic=not-a-valid-topic")
         .expect(404)
@@ -207,12 +210,64 @@ describe("/api", () => {
           expect(body.msg).to.equal("topic does not exist");
         });
     });
-    it.only("GET:200, responds with empty array when passed topic which exists but does not have any articles associated with it", () => {
+    it("GET:200, responds with empty array when passed topic which exists but does not have any articles associated with it", () => {
       return request(app)
         .get("/api/articles?topic=paper")
         .expect(200)
         .then(({ body }) => {
           expect(body.articles).to.deep.equal([]);
+        });
+    });
+    it("GET:200, number of responses limited to 10 by default", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.have.length(10);
+        });
+    });
+    it("GET:200, accepts 'limit' query which limits number of responses", () => {
+      return request(app)
+        .get("/api/articles?limit=5")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.have.length(5);
+        });
+    });
+    it("GET:400, responds with custom error message when passed invalid 'limit' query", () => {
+      return request(app)
+        .get("/api/articles?limit=not-a-valid-limit")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal("invalid 'limit' query - must be a number");
+        });
+    });
+    it("GET:200, accepts 'p' query which specifies page at which to start", () => {
+      return request(app)
+        .get("/api/articles?p=2")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles[0].article_id).to.equal(11);
+          expect(body.articles[1].article_id).to.equal(12);
+          expect(body.articles).to.have.length(2);
+        });
+    });
+    it("GET:400, responds with PSQL error message when p < 1", () => {
+      return request(app)
+        .get("/api/articles?p=0")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal(
+            "invalid 'p' query - must be greater than or equal to 1"
+          );
+        });
+    });
+    it("GET:200, body has 'total_count' property displaying total number of articles with any filters applied - discounting limit", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.total_count).to.equal(11);
         });
     });
     it("INVALID METHODS:405", () => {
@@ -430,21 +485,10 @@ describe("/api", () => {
               expect(body.msg).to.equal("input must be a number");
             });
         }); // PSQL 22P02
-        it("POST:400, responds with custom error message when request body is missing 'username' property", () => {
+        it("POST:400, responds with PSQL error message when request body is missing properties", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .send({})
-            .expect(400)
-            .then(({ body }) => {
-              expect(body.msg).to.equal(
-                "request body must have 'username' property"
-              );
-            });
-        });
-        it("POST:400, responds with PSQL error message when request body is missing 'body' property", () => {
-          return request(app)
-            .post("/api/articles/1/comments")
-            .send({ username: "butter_bridge" })
             .expect(400)
             .then(({ body }) => {
               expect(body.msg).to.equal(
@@ -495,10 +539,9 @@ describe("/api", () => {
                 "votes",
                 "created_at"
               );
-              expect(body.comments).to.have.length(13);
             });
         });
-        it("GET:200, responds with an empty array when passed article_id which exists but article does not have any comments associated with it", () => {
+        it("GET:200, responds with empty array when passed article_id which exists but article does not have any comments associated with it", () => {
           return request(app)
             .get("/api/articles/2/comments")
             .expect(200)
@@ -552,7 +595,9 @@ describe("/api", () => {
             .get("/api/articles/1/comments?sort_by=not-a-valid-column")
             .expect(400)
             .then(({ body }) => {
-              expect(body.msg).to.equal("column does not exist");
+              expect(body.msg).to.equal(
+                "invalid 'sort_by' query - column does not exist"
+              );
             });
         }); // PSQL 42703
         it("GET:400, responds with custom error message when passed invalid 'order' query", () => {
@@ -560,7 +605,55 @@ describe("/api", () => {
             .get("/api/articles/1/comments?order=not-a-valid-direction")
             .expect(400)
             .then(({ body }) => {
-              expect(body.msg).to.equal("order must be either 'asc' or 'desc'");
+              expect(body.msg).to.equal(
+                "invalid 'order' query - must be either 'asc' or 'desc'"
+              );
+            });
+        });
+        it("GET:200, number of responses limited to 10 by default", () => {
+          return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments).to.have.length(10);
+            });
+        });
+        it("GET:200, accepts 'limit' query which limits number of responses", () => {
+          return request(app)
+            .get("/api/articles/1/comments?limit=5")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments).to.have.length(5);
+            });
+        });
+        it("GET:400, responds with custom error message when passed invalid 'limit' query", () => {
+          return request(app)
+            .get("/api/articles/1/comments?limit=not-a-valid-limit")
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal(
+                "invalid 'limit' query - must be a number"
+              );
+            });
+        });
+        it("GET:200, accepts 'p' query which specifies page at which to start", () => {
+          return request(app)
+            .get("/api/articles/1/comments?p=2")
+            .expect(200)
+            .then(({ body }) => {
+              expect(body.comments[0].comment_id).to.equal(12);
+              expect(body.comments[2].comment_id).to.equal(18);
+              expect(body.comments).to.have.length(3);
+            });
+        });
+        it("GET:400, responds with PSQL error message when p < 1", () => {
+          return request(app)
+            .get("/api/articles/1/comments?p=0")
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).to.equal(
+                "invalid 'p' query - must be greater than or equal to 1"
+              );
             });
         });
         it("INVALID METHODS:405", () => {
