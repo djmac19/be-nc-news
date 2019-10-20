@@ -10,11 +10,11 @@ A hosted version can be found at https://djmac19-be-nc-news.herokuapp.com.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
-To run the project, you will need to have the latest versions of 'Node.js' and 'Postgres' installed.
+To run the project, you will need to have 'Node.js' (v12 or later) and 'Postgres' (v10 or later) installed.
 
 ```
 npm i node
@@ -28,7 +28,8 @@ To get a development environment running...
 Clone this repository:
 
 ```
-git clone https://github.com/djmac19/be-nc-news.git
+git clone https://github.com/djmac19/be-nc-news.git#
+cd be-nc-news
 ```
 
 Install dependencies:
