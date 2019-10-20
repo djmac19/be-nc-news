@@ -13,10 +13,6 @@ app.use(cors());
 
 app.use(express.json());
 
-// app.route("/").get(() => {
-//   console.log("made it as far as the app!");
-// });
-
 app.use("/api", apiRouter);
 
 app.use(handleCustomErrors);

@@ -1,6 +1,5 @@
 exports.handleCustomErrors = (err, req, res, next) => {
   if (err.status) {
-    // console.log(err, "<---err in handleCustomErrors");
     const { status, msg } = err;
     res.status(status).send({ msg });
   } else {
@@ -9,7 +8,6 @@ exports.handleCustomErrors = (err, req, res, next) => {
 };
 
 exports.handlePsqlErrors = (err, req, res, next) => {
-  // console.log(err, '<---err in handlePsqlErrors');
   if (err.code) {
     const { status, msg } = psqlErrRefObj[err.code];
     res.status(status).send({ msg });

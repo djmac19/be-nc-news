@@ -4,12 +4,6 @@ exports.selectUserByUsername = username => {
   if (!username) {
     return true;
   }
-  // if (username === undefined) {
-  //   return Promise.reject({
-  //     status: 400,
-  //     msg: "request body must have 'username' property"
-  //   });
-  // }
   return connection
     .select("*")
     .from("users")

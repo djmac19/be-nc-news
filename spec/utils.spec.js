@@ -106,6 +106,33 @@ describe("makeRefObj", () => {
     const expectedResult = {};
     expect(actualResult).to.deep.equal(expectedResult);
   });
+  it("does not mutate original input", () => {
+    const input1 = [
+      {
+        article_id: 1,
+        title: "Living in the shadow of a great man",
+        topic: "mitch",
+        author: "butter_bridge",
+        body: "I find this existence challenging",
+        created_at: 1542284514171,
+        votes: 100
+      }
+    ];
+    const input2 = "title";
+    const input3 = "article_id";
+    makeRefObj(input1, input2, input3);
+    expect(input1).to.deep.equal([
+      {
+        article_id: 1,
+        title: "Living in the shadow of a great man",
+        topic: "mitch",
+        author: "butter_bridge",
+        body: "I find this existence challenging",
+        created_at: 1542284514171,
+        votes: 100
+      }
+    ]);
+  });
   it("given an array containing only one object, returns a reference object with key-value pair determined by passed arguments", () => {
     const input1 = [
       {
@@ -155,7 +182,7 @@ describe("makeRefObj", () => {
   });
 });
 
-describe.only("formatComments", () => {
+describe("formatComments", () => {
   it("given an empty array, returns an empty array", () => {
     const input = [];
     const actualResult = formatComments(input);
