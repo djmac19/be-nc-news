@@ -39,7 +39,7 @@
     "chai": "^4.2.0",
     "chai-each": "0.0.1",
     "chai-sorted": "^0.2.0",
-    "mocha": "^6.2.2",
+    "mocha": "^10.2.0",
     "nodemon": "^1.19.4",
     "supertest": "^4.0.2"
   }
